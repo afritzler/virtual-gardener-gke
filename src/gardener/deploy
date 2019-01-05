@@ -1,0 +1,90 @@
+#!/bin/bash -e
+
+source "$(dirname "$(dirname "$0")")/bin/env"
+
+info "Cloning Gardener repo ..."
+
+repo="$GEN/gardener/repo"
+mkdir -p "$(dirname "$repo")"
+chart_path="charts/gardener"
+
+if [ ! -d "$repo" ]; then
+    git clone --depth 1 --no-checkout --filter=blob:none "https://github.com/gardener/gardener.git" "$repo"
+else
+(
+    cd "$repo"
+    git fetch --depth 1 origin master
+    git reset --soft origin/master
+)
+fi
+
+(
+    cd "$repo"
+    git checkout HEAD charts/gardener charts/utils-templates
+)
+
+path_tls="$CURRENT"/tls
+ca_name="gardener-ca"
+mkdir -p "$STATE"/gardener/tls
+if [[ ! -f "$STATE/gardener/tls/$ca_name.pem" ]]; then
+    cfssl gencert \
+        -initca "$path_tls/$ca_name-csr.json" | cfssljson -bare "$STATE/gardener/tls/$ca_name" -
+fi
+
+# generate Gardener TLS certificate if not yet done
+cert_names="gardener-apiserver gardener-controller-manager"
+for cert_name in $cert_names; do
+   if [[ ! -f "$STATE/gardener/tls/$cert_name-tls.pem" ]]; then
+      cfssl gencert \
+        -profile=server \
+        -ca="$STATE/gardener/tls/$ca_name.pem" \
+        -ca-key="$STATE/gardener/tls/$ca_name-key.pem" \
+        -config="$path_tls/ca-config.json" \
+        "$path_tls/$cert_name-config.json" | cfssljson -bare "$STATE/gardener/tls/$cert_name-tls"
+    fi
+done
+
+template="$(cat "$CURRENT/template.json")"
+path_tls_out="$STATE/gardener/tls"
+etcd_tls_out="$STATE/etcd/tls"
+
+setjsonvalue template "global.apiserver.caBundle" "$(cat "$path_tls_out/$ca_name.pem")"
+setjsonvalue template "global.apiserver.tls.crt" "$(cat "$path_tls_out/gardener-apiserver-tls.pem")"
+setjsonvalue template "global.apiserver.tls.key" "$(cat "$path_tls_out/gardener-apiserver-tls-key.pem")"
+
+setjsonvalue template "global.controller.config.server.https.tls.caBundle" "$(cat "$path_tls_out/$ca_name.pem")"
+setjsonvalue template "global.controller.config.server.https.tls.crt" "$(cat "$path_tls_out/gardener-controller-manager-tls.pem")"
+setjsonvalue template "global.controller.config.server.https.tls.key" "$(cat "$path_tls_out/gardener-controller-manager-tls-key.pem")"
+
+setjsonvalue template "global.apiserver.etcd.caBundle" "$(cat "$etcd_tls_out/etcd-ca.pem")"
+setjsonvalue template "global.apiserver.etcd.tls.crt" "$(cat "$etcd_tls_out/etcd-client-tls.pem")"
+setjsonvalue template "global.apiserver.etcd.tls.key" "$(cat "$etcd_tls_out/etcd-client-tls-key.pem")"
+
+domain="$(getconfig dns.domain)"
+dnsprovider="$(getconfig dns.type)"
+dnscreds="$(getjsonconfig dns.credentials)"
+hostedzone="$(getconfig dns.hostedZoneID)"
+
+setjsonjson template "global.controller.defaultDomains[0].credentials" "$dnscreds"
+setjsonvalue template "global.controller.defaultDomains[0].domain" "shoot.$domain"
+setjsonvalue template "global.controller.defaultDomains[0].provider" "$dnsprovider"
+setjsonvalue template "global.controller.defaultDomains[0].hostedZoneID" "$hostedzone"
+
+setjsonjson template "global.controller.internalDomain.credentials" "$dnscreds"
+setjsonvalue template "global.controller.internalDomain.domain" "internal.$domain"
+setjsonvalue template "global.controller.internalDomain.provider" "$dnsprovider"
+setjsonvalue template "global.controller.internalDomain.hostedZoneID" "$hostedzone"
+
+hellmann="$(getconfig openVPNDiffieHellmanKey)"
+setjsonvalue template "global.controller.openVPNDiffieHellmanKey" "$hellmann"
+
+echo "$template" > "$GEN/gardener/values.json"
+
+helm upgrade \
+    --install \
+    --force \
+    --wait \
+    --values "$GEN/gardener/values.json" \
+    --namespace "$NAME" \
+    gardener \
+    "$repo/$chart_path"

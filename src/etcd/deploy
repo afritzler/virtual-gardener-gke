@@ -1,0 +1,74 @@
+#!/bin/bash -e
+
+source "$(dirname "$(dirname "$0")")/bin/env"
+
+path_tls_out="$STATE/etcd/tls"
+path_tls_in="$CURRENT/tls"
+etcd_names="garden-etcd"
+
+mkdir -p "$path_tls_out"
+
+info "Generating certificates for etcd..."
+
+ca_name="etcd-ca"
+if [[ ! -f "$path_tls_out/$ca_name.pem" ]]; then
+  cfssl gencert \
+    -initca "$path_tls_in/$ca_name-csr.json" | cfssljson -bare "$path_tls_out/$ca_name"
+fi
+
+name="etcd-server"
+if [[ ! -f "$path_tls_out/$name-tls.pem" ]]; then
+  cfssl gencert \
+    -profile=server \
+    -ca="$path_tls_out/$ca_name.pem" \
+    -ca-key="$path_tls_out/$ca_name-key.pem" \
+    -config="$path_tls_in/$ca_name-config.json" \
+    "$path_tls_in/$name-config.json" | cfssljson -bare "$path_tls_out/$name-tls"
+fi
+
+name="etcd-client"
+if [[ ! -f "$path_tls_out/$name-tls.pem" ]]; then
+  cfssl gencert \
+    -profile=client \
+    -ca="$path_tls_out/$ca_name.pem" \
+    -ca-key="$path_tls_out/$ca_name-key.pem" \
+    -config="$path_tls_in/$ca_name-config.json" \
+    "$path_tls_in/$name-config.json" | cfssljson -bare "$path_tls_out/$name-tls"
+fi
+
+
+buckettype="$(getconfig etcd.bucketprovider.type)"
+creds="$(getjsonconfig etcd.bucketprovider.credentials)"
+
+mkdir -p "$GEN"/etcd
+echo "$creds" > $GEN/etcd/terraform.tfvars
+
+(
+  cd "$GEN"/etcd
+#  terraform init "$CURRENT"/backup/$buckettype
+#  terraform apply -auto-approve -var-file="$GEN/etcd/terraform.tfvars" -state="$STATE/etcdbucket.tfstate" "$CURRENT"/backup/$buckettype
+)
+
+template="$(cat "$CURRENT/template.json")"
+setjsonvalue template "tls.ca.crt" "$(cat "$path_tls_out/etcd-ca.pem")"
+setjsonvalue template "tls.ca.key" "$(cat "$path_tls_out/etcd-ca-key.pem")"
+setjsonvalue template "tls.server.crt" "$(cat "$path_tls_out/etcd-server-tls.pem")"
+setjsonvalue template "tls.server.key" "$(cat "$path_tls_out/etcd-server-tls-key.pem")"
+setjsonvalue template "tls.client.crt" "$(cat "$path_tls_out/etcd-client-tls.pem")"
+setjsonvalue template "tls.client.key" "$(cat "$path_tls_out/etcd-client-tls-key.pem")"
+
+info "Deploying etcd ..."
+
+for etcd_name in $etcd_names; do
+  setjsonvalue template "name" "$etcd_name"
+  echo "$template" > "$GEN/etcd/values.json"
+  helm upgrade \
+    --install \
+    --force \
+    --wait \
+    --values "$GEN/etcd/values.json" \
+    --namespace $NAME \
+    $etcd_name \
+    "${CURRENT}/chart/"
+done
+

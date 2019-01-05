@@ -1,0 +1,22 @@
+kubeconfig: PATH_TO_GKE_KUBECONFIG
+iaas:
+  creds:
+    serviceaccount.json: |
+      {
+        ...
+      }
+
+openVPNDiffieHellmanKey: |
+  -----BEGIN DH PARAMETERS-----
+  ...
+  -----END DH PARAMETERS-----
+
+dns:
+  type: google-clouddns
+  domain: BASEDOMAIN
+  hostedZoneID: HOSTED_ZONE_ID
+  credentials:
+    serviceaccount.json: |
+      {
+       ...
+      }

@@ -1,0 +1,21 @@
+{
+    "name": "garden-etcd",
+    "backup": {
+        "storageProvider": "",
+        "storageContainer": ""
+    },
+    "tls": {
+        "ca": {
+            "crt": "",
+            "key": ""
+        },
+        "server": {
+            "crt": "",
+            "key": ""
+        },
+        "client": {
+            "crt": "",
+            "key": ""
+        }
+    }
+}

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Values.name }}
+    component: etcd
+spec:
+  type: ClusterIP
+  sessionAffinity: None
+  selector:
+    app: {{ .Values.name }}
+    component: etcd
+  ports:
+  - name: client
+    protocol: TCP
+    port: 2379
+    targetPort: 2379

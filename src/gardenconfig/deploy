@@ -1,0 +1,23 @@
+#!/bin/bash -e
+
+source "$(dirname "$(dirname "$0")")/bin/env"
+
+creds="$(getjsonconfig iaas.creds)"
+
+template="$(cat "$CURRENT/template.json")"
+
+setjsonvalue template "seed.kubeconfig" "$(cat "$KUBECONFIG")"
+setjsonjson template "seed.iaascreds" "$creds"
+
+mkdir -p "$GEN/gardenconfig"
+
+echo "$template" > "$GEN/gardenconfig/values.json"
+
+helm upgrade \
+    --install \
+    --force \
+    --wait \
+    --values "$GEN/gardenconfig/values.json" \
+    --namespace $NAME \
+    "gardenconfig" \
+    "${CURRENT}/chart/"

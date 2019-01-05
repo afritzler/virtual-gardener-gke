@@ -1,0 +1,141 @@
+{
+  "global": {
+    "apiserver": {
+      "caBundle": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n",
+      "enabled": true,
+      "etcd": {
+        "servers": "https://garden-etcd:2379",
+        "useSidecar": false
+      },
+      "featureGates": {},
+      "groupPriorityMinimum": 10000,
+      "image": {
+        "pullPolicy": "IfNotPresent",
+        "repository": "eu.gcr.io/gardener-project/gardener/apiserver",
+        "tag": "latest"
+      },
+      "insecureSkipTLSVerify": false,
+      "replicaCount": 1,
+      "resources": {
+        "limits": {
+          "cpu": "300m",
+          "memory": "256Mi"
+        },
+        "requests": {
+          "cpu": "100m",
+          "memory": "100Mi"
+        }
+      },
+      "serviceAccountName": "gardener-apiserver",
+      "tls": {
+        "crt": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n",
+        "key": "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----\n"
+      },
+      "versionPriority": 20
+    },
+    "controller": {
+      "additionalVolumeMounts": [],
+      "additionalVolumes": [],
+      "alertingSMTP": [],
+      "config": {
+        "clientConnection": {
+          "acceptContentTypes": "application/json",
+          "burst": 130,
+          "contentType": "application/json",
+          "qps": 100
+        },
+        "controllers": {
+          "backupInfrastructure": {
+            "concurrentSyncs": 20,
+            "syncPeriod": "24h"
+          },
+          "seed": {
+            "concurrentSyncs": 5,
+            "reserveExcessCapacity": true,
+            "syncPeriod": "1m"
+          },
+          "shoot": {
+            "concurrentSyncs": 20,
+            "retryDuration": "24h",
+            "syncPeriod": "1h"
+          },
+          "shootCare": {
+            "concurrentSyncs": 5,
+            "conditionThresholds": {
+              "apiServerAvailable": "1m",
+              "controlPlaneHealthy": "1m",
+              "everyNodeReady": "5m",
+              "systemComponentsHealthy": "1m"
+            },
+            "syncPeriod": "30s"
+          },
+          "shootMaintenance": {
+            "concurrentSyncs": 5
+          },
+          "shootQuota": {
+            "concurrentSyncs": 5,
+            "syncPeriod": "60m"
+          }
+        },
+        "featureGates": {},
+        "leaderElection": {
+          "leaderElect": true,
+          "leaseDuration": "15s",
+          "renewDeadline": "10s",
+          "resourceLock": "configmaps",
+          "retryPeriod": "2s"
+        },
+        "logLevel": "info",
+        "server": {
+          "http": {
+            "bindAddress": "0.0.0.0",
+            "port": 2718
+          },
+          "https": {
+            "bindAddress": "0.0.0.0",
+            "port": 2719,
+            "tls": {
+              "caBundle": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n",
+              "crt": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n",
+              "key": "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----\n"
+            }
+          }
+        }
+      },
+      "defaultDomains": [],
+      "enabled": true,
+      "image": {
+        "pullPolicy": "IfNotPresent",
+        "repository": "eu.gcr.io/gardener-project/gardener/controller-manager",
+        "tag": "latest"
+      },
+      "internalDomain": {
+        "credentials": {
+          "accessKeyID": "access-key-id-with-route53-privileges",
+          "secretAccessKey": "secret-access-key-with-route53-privileges"
+        },
+        "domain": "example.com",
+        "hostedZoneID": "Z3ABCDE1FGHIJK",
+        "provider": "aws-route53"
+      },
+      "replicaCount": 1,
+      "resources": {
+        "limits": {
+          "cpu": "750m",
+          "memory": "512Mi"
+        },
+        "requests": {
+          "cpu": "100m",
+          "memory": "100Mi"
+        }
+      },
+      "serviceAccountName": "gardener-controller-manager"
+    },
+    "deployment": {
+      "virtualGarden": {
+        "clusterIP": "1.2.3.4",
+        "enabled": false
+      }
+    }
+  }
+}

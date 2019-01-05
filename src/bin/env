@@ -1,0 +1,103 @@
+#!/bin/bash -e
+
+BIN="$(dirname "${BASH_SOURCE[0]}")"
+if [[ "$BIN" != /* ]]; then
+    BIN="$PWD/$BIN"
+fi
+ROOT="$(dirname "$(dirname "${BIN}")")"
+CURRENT="$(dirname "$0")"
+if [[ "$CURRENT" != /* ]]; then
+    CURRENT="$PWD/$CURRENT"
+fi
+
+mkdir -p "$ROOT/gen" "$ROOT/state"
+
+fail() {
+    echo "Error: $@">&2
+    exit 1
+}
+
+info () {
+    echo "$@"
+}
+
+debug() {
+    true
+}
+
+getjsonconfig() {
+    yaml2json $ROOT/setup.yaml | jq 'if .'$1' then .'$1' else "'$2'" end'
+}
+
+getconfig() {
+    yaml2json $ROOT/setup.yaml | jq -r 'if .'$1' then .'$1' else "'$2'" end'
+}
+
+lookuppod() {
+    # Doesn't work with out of the box jq on CoreOS
+    ext=
+    if [ "$1" == -d ]; then
+        shift
+        ext="-[a-z0-9]{10}"
+    fi
+    kubectl -n $1 get pods | (egrep "$2$ext-[a-z0-9]{5} " || true) | (grep Running || true)
+}
+
+checkpod() {
+    name="$2"
+    if [ $1 == "-d" ]; then
+        name="$3"
+    fi
+    pods="$(lookuppod "$@")"
+    if [ -n "$pods" ]; then
+        echo "found $name"
+        echo "$pods"
+    else
+        missing=x
+        echo "no $name found"
+    fi
+}
+
+assurepods() {
+    $1
+    if [ -n "$missing" ]; then
+        $2
+    echo "waiting for pods"
+    while [ -n "$missing" ]; do
+        sleep 10
+        missing=
+        $1
+    done
+    fi
+}
+
+setjsonvalue() {
+    local value="$(echo "$3" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"
+    local v="$(eval echo \"\$"$1"\" | jq '.'$2'="'"$value"'"')"
+    eval $1=\'"$v"\'
+}
+
+setjsonjson() {
+    local v="$(eval echo \"\$"$1"\" | jq -s '.[0].'"$2"'=.[1] | .[0]' - <( echo "$3"))"
+    eval $1=\'"$v"\'
+}
+
+helminit() {
+    kubectl apply -f $SRC/util/helmrbac.yaml
+    helm init --service-account=tiller
+}
+
+KUBECONFIG=$(getconfig kubeconfig)
+
+if [[ "$KUBECONFIG" != /* ]]; then
+    KUBECONFIG="$ROOT/$KUBECONFIG"
+fi
+
+export STATE="$ROOT/state"
+export SRC="$ROOT/src"
+export NAME="garden"
+export NAMESPACE=$NAME
+export KUBECONFIG
+export GEN="$ROOT/gen"
+
+assurepods "checkpod -d kube-system tiller-deploy" "helminit"

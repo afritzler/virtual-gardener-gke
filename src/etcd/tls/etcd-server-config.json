@@ -1,0 +1,18 @@
+{
+    "CN": "garden:etcd-server:etcd",
+    "hosts": [
+        "garden-etcd-0",
+        "garden-etcd",
+        "garden-etcd.garden",
+        "garden-etcd.garden.svc",
+        "garden-etcd.garden.svc.cluster",
+        "garden-etcd.garden.svc.cluster.local",
+        "localhost"
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [
+    ]
+}

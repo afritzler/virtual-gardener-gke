@@ -1,0 +1,12 @@
+{
+    "CN": "garden:ca:etcd",
+    "hosts": [
+        "garden:ca:etcd"
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": []
+}
+
