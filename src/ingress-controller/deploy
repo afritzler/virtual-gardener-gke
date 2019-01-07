@@ -1,0 +1,61 @@
+#!/bin/bash -e
+
+source "$(dirname "$(dirname "$0")")/bin/env"
+
+service_name="nginx-ingress-controller"
+subdomain="ingress"
+NAMESPACE="kube-system"
+
+mapping() {
+  sed -e 's/"serviceaccount.json"/"SERVICEACCOUNT"/g'
+}
+
+helm upgrade \
+  --install \
+  --force \
+  --namespace $NAMESPACE \
+  "$service_name" \
+  "$CURRENT/chart"
+
+max_poll_seconds=300
+poll_stop=$(($(date +%s) + max_poll_seconds))
+loadBalancer=""
+while [[ $(date +%s) -lt $poll_stop ]]; do
+  sleep 2
+  loadBalancer="$(kubectl -n $NAMESPACE get service "$service_name" -o json | jq ".status.loadBalancer.ingress[0]")"
+  if [[ ! -z "$loadBalancer" && $loadBalancer != "null" ]]; then
+    break;
+  fi
+  echo "$(debug Waiting for LoadBalancer for Service $service_name ...)"
+done
+if [[ -z "$loadBalancer" ]]; then
+  fail "LoadBalancer for Service $service_name did not become reachable within $max_poll_seconds seconds!"
+fi
+echo $loadBalancer
+address="$(jq -r "if .ip? then .ip else .hostname end" <<<"$loadBalancer")"
+echo "$address" > "$STATE/$service_name-address"
+echo "$subdomain.$DOMAIN" > "$STATE/$service_name-dns"
+
+dnsprovider="$(getconfig dns.type)"
+creds="$(getjsonconfig dns.credentials)"
+hostedZone="$(getconfig dns.hostedZoneID)"
+
+if [ "$(tr a-z . <<<"$address")" == $address ]; then
+  RECORD_TYPE="A"
+else
+  RECORD_TYPE="CNAME"
+fi
+tfvars="$(echo "$creds" | mapping | jq '.RECORD_TYPE="'$RECORD_TYPE'" | .DNS_NAME="*.'$subdomain.$DOMAIN'" | .RECORD_VALUE="'$(cat "$STATE/$service_name-address")'" | .HOSTED_ZONE_ID="'$hostedZone'"' )"
+
+if [ -e "$CURRENT/dns/$dnsprovider/tfvars.sh" ]; then
+  source "$CURRENT/dns/$dnsprovider/tfvars.sh"
+fi
+
+mkdir -p "$GEN/$service_name"
+echo "$tfvars" > "$GEN/$service_name/terraform.tfvars"
+
+(
+  cd "$GEN/$service_name"
+  terraform init "$CURRENT/dns/$dnsprovider"
+  terraform apply -auto-approve -var-file="$GEN/$service_name/terraform.tfvars" -state="$STATE/$service_name-dns.tfstate" "$CURRENT"/dns/$dnsprovider
+)

@@ -1,18 +1,18 @@
 # Seed cluster registration manifest into which the control planes of Shoot clusters will be deployed.
-# ---
-# apiVersion: garden.sapcloud.io/v1beta1
-# kind: Seed
-# metadata:
-#   name: gcp
-# spec:
-#   cloud:
-#     profile: gcp
-#     region: europe-west1
-#   secretRef:
-#     name: seed-gcp
-#     namespace: garden
-#   ingressDomain: dev.gcp.seed.example.com
-#   networks: # Seed and Shoot networks must be disjunct
-#     nodes: 10.240.0.0/16
-#     pods: 10.241.128.0/17
-#     services: 10.241.0.0/17
+---
+apiVersion: garden.sapcloud.io/v1beta1
+kind: Seed
+metadata:
+  name: gcp
+spec:
+  cloud:
+    profile: gcp
+    region: {{ .Values.region }}
+  secretRef:
+    name: seed-gcp
+    namespace: garden
+  ingressDomain: {{ .Values.seed.ingressDomain }}
+  networks: # Seed and Shoot networks must be disjunct
+    nodes: {{ .Values.seed.networks.nodeCIDR }}
+    pods: {{ .Values.seed.networks.podCIDR }}
+    services: {{ .Values.seed.networks.serviceCIDR }}

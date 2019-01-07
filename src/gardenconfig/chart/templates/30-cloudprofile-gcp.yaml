@@ -4,15 +4,10 @@ kind: CloudProfile
 metadata:
   name: gcp
 spec:
-# caBundle: |
-#   -----BEGIN CERTIFICATE-----
-#   ...
-#   -----END CERTIFICATE-----
   gcp:
     constraints:
       dnsProviders:
       - name: google-clouddns
-      - name: unmanaged
       kubernetes:
         versions:
         - 1.12.3
@@ -61,13 +56,6 @@ spec:
         class: premium
         usable: false
       zones:
-      - region: europe-west1
-        names:
-        - europe-west1-b
-        - europe-west1-c
-        - europe-west1-d
-      - region: us-east1
-        names:
-        - us-east1-b
-        - us-east1-c
-        - us-east1-d
+      - region: {{ .Values.region }}
+        names: {{ toJson .Values.zones }}
+

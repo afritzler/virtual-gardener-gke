@@ -3,11 +3,22 @@
 source "$(dirname "$(dirname "$0")")/bin/env"
 
 creds="$(getjsonconfig iaas.creds)"
+region="$(getconfig iaas.region)"
+zones="$(getjsonconfig iaas.zones)"
+podCIDR="$(getconfig cluster.networks.pods)"
+nodeCIDR="$(getconfig cluster.networks.nodes)"
+serviceCIDR="$(getconfig cluster.networks.services)"
 
 template="$(cat "$CURRENT/template.json")"
 
 setjsonvalue template "seed.kubeconfig" "$(cat "$KUBECONFIG")"
 setjsonjson template "seed.iaascreds" "$creds"
+setjsonjson template "zones" "$zones"
+setjsonvalue template "region" "$region"
+setjsonvalue template "seed.networks.podCIDR" "$podCIDR"
+setjsonvalue template "seed.networks.nodeCIDR" "$nodeCIDR"
+setjsonvalue template "seed.networks.serviceCIDR" "$serviceCIDR"
+setjsonvalue template "seed.ingressDomain" "$(cat $STATE/nginx-ingress-controller-dns)"
 
 mkdir -p "$GEN/gardenconfig"
 

@@ -1,6 +1,14 @@
 {
+  "region": "",
   "seed": {
     "iaascreds": {},
-    "kubeconfig": ""
-  }
+    "ingressDomain": "",
+    "kubeconfig": "",
+    "networks": {
+      "nodeCIDR": "",
+      "podCIDR": "",
+      "serviceCIDR": ""
+    }
+  },
+  "zones": []
 }

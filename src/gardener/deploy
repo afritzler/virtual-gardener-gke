@@ -75,9 +75,6 @@ setjsonvalue template "global.controller.internalDomain.domain" "internal.$domai
 setjsonvalue template "global.controller.internalDomain.provider" "$dnsprovider"
 setjsonvalue template "global.controller.internalDomain.hostedZoneID" "$hostedzone"
 
-hellmann="$(getconfig openVPNDiffieHellmanKey)"
-setjsonvalue template "global.controller.openVPNDiffieHellmanKey" "$hellmann"
-
 echo "$template" > "$GEN/gardener/values.json"
 
 helm upgrade \

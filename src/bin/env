@@ -99,5 +99,6 @@ export NAME="garden"
 export NAMESPACE=$NAME
 export KUBECONFIG
 export GEN="$ROOT/gen"
+export DOMAIN="$(getconfig dns.domain)"
 
 assurepods "checkpod -d kube-system tiller-deploy" "helminit"

@@ -10,7 +10,7 @@
       "featureGates": {},
       "groupPriorityMinimum": 10000,
       "image": {
-        "pullPolicy": "IfNotPresent",
+        "pullPolicy": "Always",
         "repository": "eu.gcr.io/gardener-project/gardener/apiserver",
         "tag": "latest"
       },
@@ -51,7 +51,7 @@
           },
           "seed": {
             "concurrentSyncs": 5,
-            "reserveExcessCapacity": true,
+            "reserveExcessCapacity": false,
             "syncPeriod": "1m"
           },
           "shoot": {
@@ -105,7 +105,7 @@
       "defaultDomains": [],
       "enabled": true,
       "image": {
-        "pullPolicy": "IfNotPresent",
+        "pullPolicy": "Always",
         "repository": "eu.gcr.io/gardener-project/gardener/controller-manager",
         "tag": "latest"
       },

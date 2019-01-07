@@ -7,6 +7,7 @@ This project sets up a Gardener landscape on a GKE cluster.
 * Kubernetes cluster
 * Domain/Zone in CloudDNS
 * GCP serviceaccount
+* terraform
 * jq
 * cfssl
 * openssl
@@ -25,21 +26,33 @@ cd gardener-gke
 cp setup.yaml.example setup.yaml
 ```
 
-Edit the `setup.yaml` accordingly.
-
-The Diffie-Hellmann key can be created with via openssl
+You will need a `kubeconfig` with basic-auth user authentication.
 
 ```bash
-openssl genpkey -genparam -algorithm DH -out gen/dhp.pem
+export KUBECONFIG=/tmp/kubeconfig
+gcloud container clusters get-credentials CLUSTER_NAME --zone europe-west1-b --project PROJECT_NAME
+src/bin/convertkubeconfig
 ```
 
+Then, edit the `setup.yaml` accordingly.
+
 ### Deploy Etcd
+
+Deploy the Etcd needed by the Gardener extension API server
 
 ```bash
 src/etcd/deploy
 ```
 
+### Deploy Ingress Controller + Ingress DNS Record
+
+```bash
+src/ingress-controller/deploy
+```
+
 ### Deploy Gardener
+
+Deploy the Gardener extension API server and controller
 
 ```bash
 src/gardener/deploy
@@ -47,6 +60,8 @@ src/gardener/deploy
 
 ### Configure the Gardener Landscape
 
-```
+Deploy and configure CloudProfile, Seed, etc ...
+
+```bash
 src/gardenconfig/deploy
 ```
