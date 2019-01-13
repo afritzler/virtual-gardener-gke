@@ -65,3 +65,42 @@ Deploy and configure CloudProfile, Seed, etc ...
 ```bash
 src/gardenconfig/deploy
 ```
+
+## Cleanup
+
+### Shoots
+
+Delete the created shoot cluster (a simple kubectl delete shoot NAME is not allowed in order to prevent users from accidentally deleting their clusters – instead, they need to confirm upfront that the deletion is fine by annotating the shoot resource. You can use this script to do that: https://github.com/gardener/gardener/blob/master/hack/delete (./hack/delete shoot gcp-test garden-core)).
+
+To do it the manual way
+
+```bash
+kubectl -n garden-core annotate shoot gcp-test confirmation.garden.sapcloud.io/deletion=true --overwrite
+kubectl -n garden-core delete shoot gcp-test
+```
+
+### Gardener Config
+
+```bash
+helm delete --purge gardenconfig
+```
+
+### Gardener
+
+```bash
+helm delete --purge gardener
+```
+
+### Etcd
+
+```bash
+helm delete --purge garden-etcd
+```
+
+### Ingress Controller
+
+```bash
+helm delete --purge nginx-ingress-controller
+# to delete the DNS record
+./src/ingress-controller/destroy
+```

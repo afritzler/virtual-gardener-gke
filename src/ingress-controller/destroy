@@ -10,5 +10,5 @@ info "Removing DNS record ..."
 (
   cd "$GEN/$service_name"
   terraform init "$CURRENT/dns/$dnsprovider"
-  terraform destroy -auto-approve -var-file="$GEN/$service_name/terraform.tfvars" -state="$STATE/$service_name-dns.tfstate" "$CURRENT"/dns/$dnsprovider
+  terraform destroy -var-file="$GEN/$service_name/terraform.tfvars" -state="$STATE/$service_name-dns.tfstate" "$CURRENT"/dns/$dnsprovider
 )
