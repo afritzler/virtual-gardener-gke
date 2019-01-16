@@ -26,7 +26,7 @@ while [[ $(date +%s) -lt $poll_stop ]]; do
   if [[ ! -z "$loadBalancer" && $loadBalancer != "null" ]]; then
     break;
   fi
-  echo "$(debug Waiting for LoadBalancer for Service $service_name ...)"
+  info "Waiting for LoadBalancer for Service $service_name ..."
 done
 if [[ -z "$loadBalancer" ]]; then
   fail "LoadBalancer for Service $service_name did not become reachable within $max_poll_seconds seconds!"

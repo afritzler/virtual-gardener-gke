@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    #nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+  name: virtual-apiserver-ingress
+  namespace: {{ .Release.Namespace }}
+spec:
+  rules:
+  - host: {{ .Values.apiServer.hostname }}
+    http:
+      paths:
+      - backend:
+          serviceName: {{ .Values.serviceName }}
+          servicePort: 443
+  tls:
+  - hosts:
+    - {{ .Values.apiServer.hostname }}

@@ -1,0 +1,138 @@
+#!/bin/bash -e
+
+source "$(dirname "$(dirname "$0")")/bin/env"
+
+apiserver_dns="api.$(cat "$STATE"/nginx-ingress-controller-dns)"
+gardener_dns="gardener.$(cat "$STATE"/nginx-ingress-controller-dns)"
+path_basic_auth="$STATE/virtualapiserver/basicauth"
+path_tls_out="$STATE/virtualapiserver/tls"
+path_tls_in="$CURRENT/tls"
+
+mkdir -p "$path_tls_out" "$GEN/virtualapiserver"
+
+info "Generating certificates for kube-apiserver..."
+
+ca_name="kube-apiserver-ca"
+if [[ ! -f "$path_tls_out/$ca_name.pem" ]]; then
+  cfssl gencert \
+    -initca "$path_tls_in/$ca_name-csr.json" | cfssljson -bare "$path_tls_out/$ca_name" -
+fi
+
+cert_name="kube-apiserver-server"
+if [[ ! -f "$path_tls_out/$cert_name.pem" ]]; then
+  cfssl gencert \
+    -profile=server \
+    -ca="$path_tls_out/$ca_name.pem" \
+    -ca-key="$path_tls_out/$ca_name-key.pem" \
+    -config="$path_tls_in/ca-config.json" \
+    <(cat <<EOF
+{
+  "CN": "virtual-garden:server:kube-apiserver",
+  "hosts": [
+    "127.0.0.1",
+    "localhost",
+    "100.64.0.1",
+    "virtual-garden-kube-apiserver",
+    "virtual-garden-kube-apiserver.garden",
+    "virtual-garden-kube-apiserver.garden.svc",
+    "virtual-garden-kube-apiserver.garden.svc.cluster",
+    "virtual-garden-kube-apiserver.garden.svc.cluster.local",
+    "kubernetes",
+    "kubernetes.default",
+    "kubernetes.default.svc",
+    "kubernetes.default.svc.cluster",
+    "kubernetes.default.svc.cluster.local",
+    "$virtual_garden_kube_apiserver_loadbalancer",
+    "$apiserver_dns",
+    "$gardener_dns"
+  ],
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": []
+}
+EOF
+) | cfssljson -bare "$path_tls_out/$cert_name"
+fi
+
+cert_names="kube-apiserver-client-kube-controller-manager kube-apiserver-client-admin"
+for cert_name in $cert_names; do
+  if [[ ! -f "$path_tls_out/$cert_name.pem" ]]; then
+    cfssl gencert \
+      -profile=client \
+      -ca="$path_tls_out/$ca_name.pem" \
+      -ca-key="$path_tls_out/$ca_name-key.pem" \
+      -config="$path_tls_in/ca-config.json" \
+      "$path_tls_in/$cert_name-config.json" | cfssljson -bare "$path_tls_out/$cert_name"
+  fi
+done
+
+# generate kube-aggregator CA, server, client certificates if not yet done
+info "Generating certificates for virtual Kubernetes aggregator..."
+ca_name="kube-aggregator-ca"
+if [[ ! -f "$path_tls_out/$ca_name.pem" ]]; then
+  cfssl gencert \
+    -initca "$path_tls_in/$ca_name-csr.json" | cfssljson -bare "$path_tls_out/$ca_name" -
+fi
+cert_name="kube-aggregator-client"
+if [[ ! -f "$path_tls_out/$cert_name.pem" ]]; then
+  cfssl gencert \
+    -profile=client \
+    -ca="$path_tls_out/$ca_name.pem" \
+    -ca-key="$path_tls_out/$ca_name-key.pem" \
+    -config="$path_tls_in/ca-config.json" \
+    "$path_tls_in/$cert_name-config.json" | cfssljson -bare "$path_tls_out/$cert_name"
+fi
+
+# generate kube-apiserver basic auth credentials
+info "Generating basic auth credentials for virtual Kubernetes API server..."
+if [[ ! -f "$path_basic_auth" ]]; then
+  cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1 > "$path_basic_auth"
+fi
+
+
+name="service-account"
+if [[ ! -f "$path_tls_out/$name-key.pem" ]]; then
+  # there is no openssl installed in the tools image, so we use cfssl to generate a new CA cert
+  # and key although we only want the key
+  cfssl gencert -initca "$path_tls_in/kube-apiserver-ca-csr.json" | cfssljson -bare "$path_tls_out/$name" -
+fi
+rm -f "$path_tls_out/$name.pem" "$path_tls_out/$name.csr"
+
+template="$(cat "$CURRENT/template.json")"
+setjsonvalue template "apiServer.hostname" "$apiserver_dns"
+
+setjsonvalue template "tls.kubeAPIServer.ca.crt" "$(cat "$path_tls_out/kube-apiserver-ca.pem")"
+setjsonvalue template "tls.kubeAPIServer.ca.key" "$(cat "$path_tls_out/kube-apiserver-ca-key.pem")"
+setjsonvalue template "tls.kubeAPIServer.server.crt" "$(cat "$path_tls_out/kube-apiserver-server.pem")"
+setjsonvalue template "tls.kubeAPIServer.server.key" "$(cat "$path_tls_out/kube-apiserver-server-key.pem")"
+setjsonvalue template "tls.kubeAPIServer.basicAuthPassword" "$(cat "$path_basic_auth")"
+
+setjsonvalue template "tls.kubeAggregator.ca.crt" "$(cat "$path_tls_out/kube-aggregator-ca.pem")"
+setjsonvalue template "tls.kubeAggregator.ca.key" "$(cat "$path_tls_out/kube-aggregator-ca-key.pem")"
+setjsonvalue template "tls.kubeAggregator.client.crt" "$(cat "$path_tls_out/kube-aggregator-client.pem")"
+setjsonvalue template "tls.kubeAggregator.client.key" "$(cat "$path_tls_out/kube-aggregator-client-key.pem")"
+
+setjsonvalue template "tls.admin.crt" "$(cat "$path_tls_out/kube-apiserver-client-admin.pem")"
+setjsonvalue template "tls.admin.key" "$(cat "$path_tls_out/kube-apiserver-client-admin-key.pem")"
+
+setjsonvalue template "tls.kubeControllerManager.crt" "$(cat "$path_tls_out/kube-apiserver-client-kube-controller-manager.pem")"
+setjsonvalue template "tls.kubeControllerManager.key" "$(cat "$path_tls_out/kube-apiserver-client-kube-controller-manager-key.pem")"
+
+setjsonvalue template "tls.serviceAccountKey" "$(cat "$path_tls_out/service-account-key.pem")"
+
+info "Deploying virtual apiserver ..."
+echo "$template" > "$GEN/virtualapiserver/values.json"
+helm upgrade \
+  --install \
+  --force \
+  --wait \
+  --values "$GEN/virtualapiserver/values.json" \
+  --namespace $NAME \
+  virtual-apiserver \
+  "${CURRENT}/chart/"
+
+# export kubeconfig for admins
+info "Exporting kubeconfig for virtual Kubernetes cluster for Gardener..."
+kubectl -n garden get secret virtual-garden-kubeconfig-for-admin -o jsonpath={.data.kubeconfig} | base64 -d > "$STATE/virtualapiserver/kubeconfig.yaml"

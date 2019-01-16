@@ -1,0 +1,43 @@
+{
+  "serviceName": "virtual-garden-kube-apiserver",
+  "apiServer": {
+    "hostname": "127.0.0.1",
+    "serviceName": "virtual-garden-kube-apiserver"
+  },
+  "images": {
+    "hyperkube": "k8s.gcr.io/hyperkube:v1.12.3"
+  },
+  "replicas": 3,
+  "tls": {
+    "admin": {
+      "crt": "client-certificate",
+      "key": "client-key"
+    },
+    "kubeAPIServer": {
+      "basicAuthPassword": "password",
+      "ca": {
+        "crt": "ca-certificate",
+        "key": "ca-key"
+      },
+      "server": {
+        "crt": "server-certificate",
+        "key": "server-key"
+      }
+    },
+    "kubeAggregator": {
+      "ca": {
+        "crt": "ca-certificate",
+        "key": "ca-key"
+      },
+      "client": {
+        "crt": "server-certificate",
+        "key": "server-key"
+      }
+    },
+    "kubeControllerManager": {
+      "crt": "client-certificate",
+      "key": "client-key"
+    },
+    "serviceAccountKey": "key"
+  }
+}

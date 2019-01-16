@@ -1,0 +1,11 @@
+{
+    "CN": "virtual-garden:client:admin",
+    "hosts": [],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [{
+        "O": "system:masters"
+    }]
+}

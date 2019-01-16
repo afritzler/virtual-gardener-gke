@@ -1,0 +1,12 @@
+{
+    "CN": "virtual-garden:ca:kube-apiserver",
+    "hosts": [
+        "virtual-garden:ca:kube-apiserver"
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": []
+}
+

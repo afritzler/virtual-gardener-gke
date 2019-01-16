@@ -4,7 +4,7 @@ source "$(dirname "$(dirname "$0")")/bin/env"
 
 path_tls_out="$STATE/etcd/tls"
 path_tls_in="$CURRENT/tls"
-etcd_names="garden-etcd"
+etcd_names="virtual-garden-etcd"
 
 mkdir -p "$path_tls_out"
 
