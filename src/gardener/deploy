@@ -8,19 +8,46 @@ repo="$GEN/gardener/repo"
 mkdir -p "$(dirname "$repo")"
 chart_path="charts/gardener"
 
+generate_kubeconfig() {
+username="$1"
+usertoken="$2"
+cluster_ca_path="$3"
+cluster_server="$4"
+
+cat <<EOF
+---
+apiVersion: v1
+kind: Config
+current-context: cluster
+contexts:
+- context:
+    cluster: cluster
+    user: $username
+  name: cluster
+clusters:
+- cluster:
+    certificate-authority-data: $(cat "$cluster_ca_path" | base64 | tr -d '\n')
+    server: $cluster_server
+  name: cluster
+users:
+- name: $username
+  user:
+    token: $usertoken
+EOF
+}
+
 if [ ! -d "$repo" ]; then
     git clone --depth 1 --no-checkout --filter=blob:none "https://github.com/gardener/gardener.git" "$repo"
 else
 (
     cd "$repo"
-    git fetch --depth 1 origin master
-    git reset --soft origin/master
+    git fetch --depth 1 origin refs/tags/0.16.0:refs/tags/0.16.0
 )
 fi
 
 (
     cd "$repo"
-    git checkout HEAD charts/gardener charts/utils-templates
+    git checkout tags/0.16.0 charts/gardener charts/utils-templates
 )
 
 path_tls="$CURRENT"/tls
@@ -74,14 +101,39 @@ setjsonjson template "global.controller.internalDomain.credentials" "$dnscreds"
 setjsonvalue template "global.controller.internalDomain.domain" "internal.$domain"
 setjsonvalue template "global.controller.internalDomain.provider" "$dnsprovider"
 setjsonvalue template "global.controller.internalDomain.hostedZoneID" "$hostedzone"
+setjsonvalue template "global.deployment.virtualGarden.clusterIP" "$(getconfig garden.clusterip)"
 
 echo "$template" > "$GEN/gardener/values.json"
 
+# Deploy into virtual cluster
+helm template \
+    --values "$GEN/gardener/values.json" \
+    --namespace "$NAME" \
+    --name gardener \
+    "$repo/$chart_path/charts/application" \
+    > "$GEN/gardener/application.yaml"
+
+kubectl_virtual create ns garden || true
+kubectl_virtual apply -f "$GEN/gardener/application.yaml"
+
+info "Generating kubeconfigs for Gardener..."
+apiserver_kubeconfig_path="$STATE/gardener/garden-kubeconfig-apiserver.yaml"
+controller_kubeconfig_path="$STATE/gardener/garden-kubeconfig-controller.yaml"
+apiserver_token="$(kubectl_virtual -n garden get secret $(kubectl_virtual -n garden get sa gardener-apiserver -o jsonpath={.secrets[0].name}) -o jsonpath={.data.token} | base64 -d)"
+controller_token="$(kubectl_virtual -n garden get secret $(kubectl_virtual -n garden get sa gardener-controller-manager -o jsonpath={.secrets[0].name}) -o jsonpath={.data.token} | base64 -d)"
+cluster_endpoint="https://$(kubectl -n garden get svc -l app=virtual-garden,component=kube-apiserver -o jsonpath="{.items[0].metadata.name}:{.items[0].spec.ports[0].port}")"
+generate_kubeconfig "gardener-apiserver" "$apiserver_token" "$STATE/virtualapiserver/tls/kube-apiserver-ca.pem" "$cluster_endpoint" > "$apiserver_kubeconfig_path"
+generate_kubeconfig "gardener-controller-manager" "$controller_token" "$STATE/virtualapiserver/tls/kube-apiserver-ca.pem" "$cluster_endpoint" > "$controller_kubeconfig_path"
+
+# Deploy into GKE cluster
 helm upgrade \
     --install \
     --force \
     --wait \
     --values "$GEN/gardener/values.json" \
+    --set global.apiserver.kubeconfig="$(cat $apiserver_kubeconfig_path)" \
+    --set global.controller.kubeconfig="$(cat $controller_kubeconfig_path)" \
     --namespace "$NAME" \
     gardener \
-    "$repo/$chart_path"
+    "$repo/$chart_path/charts/runtime"
+

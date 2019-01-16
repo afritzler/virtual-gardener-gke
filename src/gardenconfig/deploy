@@ -24,11 +24,11 @@ mkdir -p "$GEN/gardenconfig"
 
 echo "$template" > "$GEN/gardenconfig/values.json"
 
-helm upgrade \
-    --install \
-    --force \
-    --wait \
+helm template \
     --values "$GEN/gardenconfig/values.json" \
     --namespace $NAME \
-    "gardenconfig" \
-    "${CURRENT}/chart/"
+    --name gardenconfig \
+    "${CURRENT}/chart/" \
+    > "$GEN/gardenconfig/config.yaml"
+
+kubectl_virtual apply -f "$GEN/gardenconfig/config.yaml"
