@@ -72,6 +72,14 @@ Deploy and configure CloudProfile, Seed, etc ...
 src/gardenconfig/deploy
 ```
 
+### Interacting with the Virtual Setup
+
+The `kubeconfig` can be found under `state/virtualapiserver/kubeconfig.yaml`. So in order to deploy something to the Gardener API server you need to run
+
+```bash
+kubectl --kubeconfig=state/virtualapiserver/kubeconfig.yaml apply -f examples/shoot.yaml
+```
+
 ## Cleanup
 
 ### Shoots
