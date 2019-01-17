@@ -50,6 +50,12 @@ src/etcd/deploy
 src/ingress-controller/deploy
 ```
 
+### Deploy Virtual Kube-Apiserver
+
+```bash
+src/virtualapiserver/deploy
+```
+
 ### Deploy Gardener
 
 Deploy the Gardener extension API server and controller
@@ -91,10 +97,17 @@ helm delete --purge gardenconfig
 helm delete --purge gardener
 ```
 
+### Gardener
+
+```bash
+helm delete --purge virtual-apiserver
+```
+
+
 ### Etcd
 
 ```bash
-helm delete --purge garden-etcd
+helm delete --purge virtual-garden-etcd
 ```
 
 ### Ingress Controller
