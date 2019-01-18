@@ -1,6 +1,10 @@
 # Gardener-GKE
 
-This project sets up a Gardener landscape on a GKE cluster.
+This project sets up a Gardener landscape on a GKE cluster. This is by no means a productive setup since it currently doesn't setup any backup infrastructure for the Gardener cluster.
+
+![alt text](images/overview.png)
+
+An animated presentation of this setup can be found here: https://docs.google.com/presentation/d/1-0422pvLNaWcGpKP5Skd0sNh_BcZVfYsc71Uv_ey-Bw/edit?usp=sharing
 
 ## Prerequisites
 
