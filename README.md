@@ -8,6 +8,7 @@ This project sets up a Gardener landscape on a GKE cluster.
 * Domain/Zone in CloudDNS
 * GCP serviceaccount
 * terraform
+* yaml2json
 * jq
 * cfssl
 * openssl
@@ -96,7 +97,8 @@ kubectl -n garden-core delete shoot gcp-test
 ### Gardener Config
 
 ```bash
-helm delete --purge gardenconfig
+kubectl --kubeconfig state/virtualapiserver/kubeconfig.yaml annotate project core confirmation.garden.sapcloud.io/deletion=true --overwrite
+kubectl --kubeconfig state/virtualapiserver/kubeconfig.yaml delete -f gen/gardenconfig/config.yaml
 ```
 
 ### Gardener

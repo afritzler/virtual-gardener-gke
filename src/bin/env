@@ -30,11 +30,11 @@ kubectl_virtual() {
 }
 
 getjsonconfig() {
-    yaml2json $ROOT/setup.yaml | jq 'if .'$1' then .'$1' else "'$2'" end'
+    cat $ROOT/setup.yaml | yaml2json | jq 'if .'$1' then .'$1' else "'$2'" end'
 }
 
 getconfig() {
-    yaml2json $ROOT/setup.yaml | jq -r 'if .'$1' then .'$1' else "'$2'" end'
+    cat $ROOT/setup.yaml | yaml2json | jq -r 'if .'$1' then .'$1' else "'$2'" end'
 }
 
 lookuppod() {
