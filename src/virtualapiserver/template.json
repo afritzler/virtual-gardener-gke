@@ -2,7 +2,8 @@
   "serviceName": "virtual-garden-kube-apiserver",
   "apiServer": {
     "hostname": "127.0.0.1",
-    "serviceName": "virtual-garden-kube-apiserver"
+    "serviceName": "virtual-garden-kube-apiserver",
+    "oidcIssuerURL": "someurl"
   },
   "images": {
     "hyperkube": "k8s.gcr.io/hyperkube:v1.12.3"

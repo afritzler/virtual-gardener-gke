@@ -23,6 +23,7 @@ spec:
         checksum/secret-kube-apiserver-basic-auth: {{ include (print $.Template.BasePath "/secret-kube-apiserver-basic-auth.yaml") . | sha256sum }}
         checksum/secret-kube-controller-manager-client: {{ include (print $.Template.BasePath "/secret-kube-controller-manager-tls.yaml") . | sha256sum }}
         checksum/secret-service-account-key: {{ include (print $.Template.BasePath "/secret-service-account-key.yaml") . | sha256sum }}
+        checksum/secret-identity-ca: {{ include (print $.Template.BasePath "/secret-identity-ca.yaml") . | sha256sum }}
       labels:
         app: virtual-garden
         component: kube-apiserver
@@ -73,6 +74,7 @@ spec:
         - --oidc-client-id=kube-kubectl
         - --oidc-username-claim=email
         - --oidc-groups-claim=groups
+        - --oidc-ca-file=/srv/kubernetes/identity-ca/ca.crt
 {{ end }}
         - --profiling=false
         - --proxy-client-cert-file=/srv/kubernetes/aggregator/tls.crt
@@ -151,6 +153,8 @@ spec:
         - name: ssl-certs-hosts
           mountPath: /usr/share/ca-certificates
           readOnly: true
+        - name: ca-identity
+          mountPath: /srv/kubernetes/identity-ca
       - name: kube-controller-manager
         image: {{ index .Values.images "hyperkube" }}
         imagePullPolicy: IfNotPresent
@@ -201,6 +205,9 @@ spec:
       - name: ca-kube-apiserver
         secret:
           secretName: virtual-garden-kube-apiserver-ca
+      - name: ca-identity
+        secret:
+          secretName: identity-ca
       - name: ca-etcd
         secret:
           secretName: virtual-garden-etcd-ca

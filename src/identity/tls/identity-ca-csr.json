@@ -1,0 +1,12 @@
+{
+    "CN": "identity:ca",
+    "hosts": [
+        "identity:ca"
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": []
+}
+

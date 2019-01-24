@@ -2,6 +2,10 @@
 
 source "$(dirname "$(dirname "$0")")/bin/env"
 
+if [ ! -d "$STATE/identity" ]; then
+  fail "Deploy identity first!"
+fi
+
 apiserver_dns="api.$(cat "$STATE"/nginx-ingress-controller-dns)"
 gardener_dns="gardener.$(cat "$STATE"/nginx-ingress-controller-dns)"
 path_basic_auth="$STATE/virtualapiserver/basicauth"
@@ -88,7 +92,7 @@ fi
 # generate kube-apiserver basic auth credentials
 info "Generating basic auth credentials for virtual Kubernetes API server..."
 if [[ ! -f "$path_basic_auth" ]]; then
-  cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1 > "$path_basic_auth"
+  generate_password 32 > "$path_basic_auth"
 fi
 
 
@@ -102,6 +106,7 @@ rm -f "$path_tls_out/$name.pem" "$path_tls_out/$name.csr"
 
 template="$(cat "$CURRENT/template.json")"
 setjsonvalue template "apiServer.hostname" "$apiserver_dns"
+setjsonvalue template "apiServer.oidcIssuerURL" "$(cat "$STATE"/identity/issuerurl)"
 
 setjsonvalue template "tls.kubeAPIServer.ca.crt" "$(cat "$path_tls_out/kube-apiserver-ca.pem")"
 setjsonvalue template "tls.kubeAPIServer.ca.key" "$(cat "$path_tls_out/kube-apiserver-ca-key.pem")"
@@ -116,6 +121,9 @@ setjsonvalue template "tls.kubeAggregator.client.key" "$(cat "$path_tls_out/kube
 
 setjsonvalue template "tls.admin.crt" "$(cat "$path_tls_out/kube-apiserver-client-admin.pem")"
 setjsonvalue template "tls.admin.key" "$(cat "$path_tls_out/kube-apiserver-client-admin-key.pem")"
+
+setjsonvalue template "tls.identity.ca.crt" "$(cat "$STATE/identity/tls/identity-ca.pem")"
+setjsonvalue template "tls.identity.ca.key" "$(cat "$STATE/identity/tls/identity-ca-key.pem")"
 
 setjsonvalue template "tls.kubeControllerManager.crt" "$(cat "$path_tls_out/kube-apiserver-client-kube-controller-manager.pem")"
 setjsonvalue template "tls.kubeControllerManager.key" "$(cat "$path_tls_out/kube-apiserver-client-kube-controller-manager-key.pem")"

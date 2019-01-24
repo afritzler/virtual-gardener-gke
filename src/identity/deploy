@@ -1,0 +1,119 @@
+#!/bin/bash -e
+
+source "$(dirname "$(dirname "$0")")/bin/env"
+
+dashboard_version="1.27.0"
+mkdir -p "$STATE/identity"
+
+path_dashboard_secret="$STATE/identity/dashboard_secret"
+path_kubectl_secret="$STATE/identity/kubectl_secret"
+
+identity_ingress_domain="identity.$(cat "$STATE/nginx-ingress-controller-dns")"
+dashboard_ingress_domain="dashboard.$(cat "$STATE/nginx-ingress-controller-dns")"
+
+echo "$identity_ingress_domain" > "$STATE/identity/identity_dns"
+echo "$dashboard_ingress_domain" > "$STATE/identity/dashboard_dns"
+
+git_checkout "identity" "Dashboard" "https://github.com/gardener/dashboard.git" $dashboard_version charts
+
+if [[ ! -f "$path_dashboard_secret" ]]; then
+  generate_password 32 > "$path_dashboard_secret"
+fi
+
+if [[ ! -f "$path_kubectl_secret" ]]; then
+  generate_password 32 > "$path_kubectl_secret"
+fi
+
+info "Generating certificates for identity..."
+
+path_tls_out="$STATE/identity/tls"
+path_tls_in="$CURRENT/tls"
+mkdir -p "$path_tls_out"
+
+ca_name="identity-ca"
+if [[ ! -f "$path_tls_out/$ca_name.pem" ]]; then
+  cfssl gencert \
+    -initca "$path_tls_in/$ca_name-csr.json" | cfssljson -bare "$path_tls_out/$ca_name" -
+fi
+
+cert_name="identity"
+if [[ ! -f "$path_tls_out/$cert_name.pem" ]]; then
+cfssl gencert \
+    -profile=server \
+    -ca="$path_tls_out/$ca_name.pem" \
+    -ca-key="$path_tls_out/$ca_name-key.pem" \
+    -config="$path_tls_in/ca-config.json" \
+    <(cat <<EOF
+{
+"CN": "$cert_name",
+"hosts": [
+    "127.0.0.1",
+    "localhost",
+    "100.64.0.1",
+    "$cert_name-service",
+    "$cert_name-service.garden",
+    "$cert_name-service.garden.svc",
+    "$cert_name-service.garden.svc.cluster",
+    "$cert_name-service.garden.svc.cluster.local",
+    "$identity_ingress_domain",
+    "$dashboard_ingress_domain"
+],
+"key": {
+    "algo": "rsa",
+    "size": 2048
+},
+"names": []
+}
+EOF
+    ) | cfssljson -bare "$path_tls_out/$cert_name"
+fi
+
+
+#issuerurl="https://$identity_ingress_domain"
+issuerurl="https://$dashboard_ingress_domain/oidc"
+dashboardurl="https://$dashboard_ingress_domain"
+
+template="$(cat "$CURRENT/template.json")"
+
+setjsonvalue template "dashboardClientSecret" "$(cat "$path_dashboard_secret")"
+setjsonvalue template "kubectlClientSecret" "$(cat "$path_kubectl_secret")"
+setjsonvalue template "dashboardOrigins[0]" "$dashboardurl"
+setjsonvalue template "hosts[0]" "$identity_ingress_domain"
+setjsonvalue template "issuerUrl" "$issuerurl"
+setjsonjson template "connectors" "[]"
+
+email="$(getconfig dashboard.email)"
+password="$(getconfig dashboard.password)"
+
+setjsonvalue template "staticPasswords[0].email" "$email"
+setjsonvalue template "staticPasswords[0].hash" "$(generate_bcrypt_hash "$password")"
+
+setjsonvalue template "tls.crt" "$(cat "$path_tls_out/identity.pem")"
+setjsonvalue template "tls.key" "$(cat "$path_tls_out/identity-key.pem")"
+
+echo "$issuerurl" > "$STATE/identity/issuerurl"
+echo "$dashboardurl" > "$STATE/identity/dashboardurl"
+
+info "Deploying identity ..."
+echo "$template" > "$GEN/identity/values.json"
+
+helm upgrade \
+  --install \
+  --force \
+  --wait \
+  --values "$GEN/identity/values.json" \
+  --namespace $NAME \
+  identity \
+  "$repo/charts/identity"
+
+
+
+
+
+
+
+
+
+
+
+

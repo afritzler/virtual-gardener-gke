@@ -55,6 +55,12 @@ src/etcd/deploy
 src/ingress-controller/deploy
 ```
 
+### Deploy Identity
+
+```bash
+src/identity/deploy
+```
+
 ### Deploy Virtual Kube-Apiserver
 
 ```bash
@@ -77,6 +83,12 @@ Deploy and configure CloudProfile, Seed, etc ...
 src/gardenconfig/deploy
 ```
 
+### Deploy the Gardener Dashboard
+
+```bash
+src/dashboard/deploy
+```
+
 ### Interacting with the Virtual Setup
 
 The `kubeconfig` can be found under `state/virtualapiserver/kubeconfig.yaml`. So in order to deploy something to the Gardener API server you need to run
@@ -87,44 +99,55 @@ kubectl --kubeconfig=state/virtualapiserver/kubeconfig.yaml apply -f examples/sh
 
 ## Cleanup
 
-### Shoots
+### Remove Shoot
 
 Delete the created shoot cluster (a simple kubectl delete shoot NAME is not allowed in order to prevent users from accidentally deleting their clusters – instead, they need to confirm upfront that the deletion is fine by annotating the shoot resource. You can use this script to do that: https://github.com/gardener/gardener/blob/master/hack/delete (./hack/delete shoot gcp-test garden-core)).
 
 To do it the manual way
 
 ```bash
-kubectl -n garden-core annotate shoot gcp-test confirmation.garden.sapcloud.io/deletion=true --overwrite
-kubectl -n garden-core delete shoot gcp-test
+kubectl --kubeconfig=state/virtualapiserver/kubeconfig.yaml -n garden-core annotate shoot gcp-test confirmation.garden.sapcloud.io/deletion=true --overwrite
+kubectl --kubeconfig=state/virtualapiserver/kubeconfig.yaml -n garden-core delete shoot gcp-test
 ```
 
-### Gardener Config
+### Remove Gardener Config
 
 ```bash
 kubectl --kubeconfig state/virtualapiserver/kubeconfig.yaml annotate project core confirmation.garden.sapcloud.io/deletion=true --overwrite
 kubectl --kubeconfig state/virtualapiserver/kubeconfig.yaml delete -f gen/gardenconfig/config.yaml
 ```
 
-### Gardener
+### Remove Gardener
 
 ```bash
 helm delete --purge gardener
 ```
 
-### Gardener
+### Remove Virtual API Server
 
 ```bash
 helm delete --purge virtual-apiserver
 ```
 
+### Remove Identity
 
-### Etcd
+```bash
+helm delete --purge identity
+```
+
+### Remove Gardener Dashboard
+
+```bash
+helm delete --purge gardener-dashboard
+```
+
+### Remove Etcd
 
 ```bash
 helm delete --purge virtual-garden-etcd
 ```
 
-### Ingress Controller
+### Remove Ingress Controller + DNS Record
 
 ```bash
 helm delete --purge nginx-ingress-controller

@@ -2,11 +2,10 @@
 
 source "$(dirname "$(dirname "$0")")/bin/env"
 
-info "Cloning Gardener repo ..."
-
-repo="$GEN/gardener/repo"
-mkdir -p "$(dirname "$repo")"
 chart_path="charts/gardener"
+gardener_version="0.16.0"
+
+git_checkout "gardener" "Gardener" "https://github.com/gardener/gardener.git" $gardener_version charts/gardener charts/utils-templates
 
 generate_kubeconfig() {
 username="$1"
@@ -35,20 +34,6 @@ users:
     token: $usertoken
 EOF
 }
-
-if [ ! -d "$repo" ]; then
-    git clone --depth 1 --no-checkout --filter=blob:none "https://github.com/gardener/gardener.git" "$repo"
-else
-(
-    cd "$repo"
-    git fetch --depth 1 origin refs/tags/0.16.0:refs/tags/0.16.0
-)
-fi
-
-(
-    cd "$repo"
-    git checkout tags/0.16.0 charts/gardener charts/utils-templates
-)
 
 path_tls="$CURRENT"/tls
 ca_name="gardener-ca"
