@@ -1,5 +1,13 @@
 kubeconfig: PATH_TO_GKE_KUBECONFIG
 
+garden:
+  clusterip: PICK_A_FREE_SERVICEIP
+
+dashboard:
+  # Those are the login credentials for the Gardener dashboard
+  email: admin@example.com
+  password: SOME_SUPER_STRONG_PASSWORD
+
 cluster:
   networks:
     nodes: 10.132.0.0/16

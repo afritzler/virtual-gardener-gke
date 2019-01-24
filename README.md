@@ -89,6 +89,16 @@ src/gardenconfig/deploy
 src/dashboard/deploy
 ```
 
+### Accessing the Gardener Dashboard
+
+To access the Gardener Dashboard, use
+
+```bash
+cat state/identity/dashboardurl
+```
+
+to figure out the dashboard URL.
+
 ### Interacting with the Virtual Setup
 
 The `kubeconfig` can be found under `state/virtualapiserver/kubeconfig.yaml`. So in order to deploy something to the Gardener API server you need to run
