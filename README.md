@@ -1,6 +1,6 @@
 # Gardener-GKE
 
-_Disclaimer: This project sets up a Gardener landscape on a GKE cluster. This is by no means a productive setup!._
+_Disclaimer: This project sets up a Gardener landscape on a GKE cluster. This is by no means a productive setup!_
 
 ## Overview
 
