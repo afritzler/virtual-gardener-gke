@@ -2,10 +2,6 @@
 
 This project sets up a Gardener landscape on a GKE cluster. This is by no means a productive setup since it currently doesn't setup any backup infrastructure for the Gardener cluster.
 
-![alt text](images/overview.png)
-
-An animated presentation of this setup can be found here: https://docs.google.com/presentation/d/1-0422pvLNaWcGpKP5Skd0sNh_BcZVfYsc71Uv_ey-Bw/edit?usp=sharing
-
 ## Prerequisites
 
 * Kubernetes cluster
@@ -26,8 +22,8 @@ An animated presentation of this setup can be found here: https://docs.google.co
 First we need to clone and configure our setup
 
 ```bash
-git clone https://github.com/afritzler/gardener-gke.git
-cd gardener-gke
+git clone https://github.com/afritzler/virtual-gardener-gke.git
+cd virtual-gardener-gke
 cp setup.yaml.example setup.yaml
 ```
 
