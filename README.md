@@ -1,6 +1,6 @@
 # Gardener-GKE
 
-This project sets up a Gardener landscape on a GKE cluster. This is by no means a productive setup since it currently doesn't setup any backup infrastructure for the Gardener cluster.
+_Disclaimer: This project sets up a Gardener landscape on a GKE cluster. This is by no means a productive setup!._
 
 ## Prerequisites
 
@@ -161,7 +161,7 @@ helm delete --purge nginx-ingress-controller
 ./src/ingress-controller/destroy
 ```
 
-### Namespace and PVCs
+### Remove the Garden Namespace
 
 ```bash
 kubectl delete ns garden
