@@ -11,11 +11,12 @@ if [ ! -d "$STATE/virtualapiserver" ]; then
 fi
 
 dashboard_version="1.27.0"
+dashboard_helm="helm"
 mkdir -p "$STATE/dashboard"
 
 dashboard_ingress_domain="$(cat "$STATE/identity/dashboard_dns")"
 
-git_checkout "dashboard" "Dashboard" "https://github.com/gardener/dashboard.git" $dashboard_version "charts"
+git_checkout -branch "dashboard" "Dashboard" "https://github.com/gardener/dashboard.git" $dashboard_helm "charts"
 
 # info "Generating certificates for dashboard ..."
 
@@ -71,6 +72,8 @@ setjsonvalue template "tls.key" "$(cat "$STATE/identity/tls/identity-key.pem")"
 
 setjsonvalue template "oidc.ca" "$(cat "$STATE/identity/tls/identity-ca.pem")"
 setjsonvalue template "oidc.redirectUri" "https://$dashboard_ingress_domain/callback"
+
+setjsonvalue template "ingress.additionalHostPaths[0].path" "/oidc"
 
 setjsonvalue template "kubeconfig" "$(cat "$STATE/virtualapiserver/kubeconfig.yaml")"
 

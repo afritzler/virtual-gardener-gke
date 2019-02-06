@@ -34,6 +34,11 @@
       "versionPriority": 20
     },
     "controller": {
+      "image": {
+        "pullPolicy": "Always",
+        "repository": "eu.gcr.io/gardener-project/gardener/controller-manager",
+        "tag": "0.16.0"
+      },
       "additionalVolumeMounts": [],
       "additionalVolumes": [],
       "alertingSMTP": [],
@@ -104,11 +109,6 @@
       },
       "defaultDomains": [],
       "enabled": true,
-      "image": {
-        "pullPolicy": "Always",
-        "repository": "eu.gcr.io/gardener-project/gardener/controller-manager",
-        "tag": "latest"
-      },
       "internalDomain": {
         "credentials": {
           "accessKeyID": "access-key-id-with-route53-privileges",

@@ -26,17 +26,23 @@ debug() {
 }
 
 git_checkout() {
+    if [ $1 == "-branch" ]; then
+        prefix=
+        shift
+    else
+        prefix="refs/tags/"
+    fi
     info "Cloning $2 repo ..."
 
     repo="$GEN/$1/repo"
     mkdir -p "$(dirname "$repo")"
-    return
+
     if [ ! -d "$repo" ]; then
         git clone --depth 1 --no-checkout --filter=blob:none "$3" "$repo"
     fi
     (
         cd "$repo"
-        git fetch --depth 1 origin refs/tags/$4:refs/tags/$4
+        git fetch --depth 1 -f origin $prefix$4:$prefix$4
         git checkout $4 "${@:5}"
     )
 }
@@ -66,7 +72,7 @@ lookuppod() {
     ext=
     if [ "$1" == -d ]; then
         shift
-        ext="-[a-z0-9]{10}"
+        ext="-[a-z0-9]{9}"
     fi
     kubectl -n $1 get pods | (egrep "$2$ext-[a-z0-9]{5} " || true) | (grep Running || true)
 }
