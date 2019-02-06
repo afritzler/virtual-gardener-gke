@@ -160,3 +160,9 @@ helm delete --purge nginx-ingress-controller
 # to delete the DNS record
 ./src/ingress-controller/destroy
 ```
+
+### Namespace and PVCs
+
+```bash
+kubectl delete ns garden
+```

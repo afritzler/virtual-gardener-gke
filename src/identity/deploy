@@ -9,7 +9,7 @@ path_dashboard_secret="$STATE/identity/dashboard_secret"
 path_kubectl_secret="$STATE/identity/kubectl_secret"
 
 identity_ingress_domain="identity.$(cat "$STATE/nginx-ingress-controller-dns")"
-dashboard_ingress_domain="dashboard.$(cat "$STATE/nginx-ingress-controller-dns")"
+dashboard_ingress_domain="gardener.$(cat "$STATE/nginx-ingress-controller-dns")"
 
 echo "$identity_ingress_domain" > "$STATE/identity/identity_dns"
 echo "$dashboard_ingress_domain" > "$STATE/identity/dashboard_dns"
