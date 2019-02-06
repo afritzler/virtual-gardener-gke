@@ -2,6 +2,10 @@
 
 _Disclaimer: This project sets up a Gardener landscape on a GKE cluster. This is by no means a productive setup!._
 
+## Overview
+
+![overview](images/overview.png)
+
 ## Prerequisites
 
 * Kubernetes cluster

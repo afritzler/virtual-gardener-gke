@@ -2,3 +2,4 @@
 /state
 setup.yaml
 kubeconfig
+.DS_Store
