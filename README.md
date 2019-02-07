@@ -41,18 +41,18 @@ src/bin/convertkubeconfig
 
 Then, edit the `setup.yaml` accordingly.
 
+### Deploy Ingress Controller + Ingress DNS Record
+
+```bash
+src/ingress-controller/deploy
+```
+
 ### Deploy Etcd
 
 Deploy the Etcd needed by the Gardener extension API server
 
 ```bash
 src/etcd/deploy
-```
-
-### Deploy Ingress Controller + Ingress DNS Record
-
-```bash
-src/ingress-controller/deploy
 ```
 
 ### Deploy Identity

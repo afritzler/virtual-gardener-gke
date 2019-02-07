@@ -18,45 +18,7 @@ dashboard_ingress_domain="$(cat "$STATE/identity/dashboard_dns")"
 
 git_checkout -branch "dashboard" "Dashboard" "https://github.com/gardener/dashboard.git" $dashboard_helm "charts"
 
-# info "Generating certificates for dashboard ..."
-
-# path_tls_out="$STATE/dashboard/tls"
-# path_tls_in="$CURRENT/tls"
-# mkdir -p "$path_tls_out"
-
-# cert_name="gardener-dashboard"
-# if [[ ! -f "$path_tls_out/$cert_name.pem" ]]; then
-# cfssl gencert \
-#     -profile=server \
-#     -ca="$STATE/identity/tls/identity.pem" \
-#     -ca-key="$STATE/identity/tls/identity-key.pem" \
-#     -config="$path_tls_in/ca-config.json" \
-#     <(cat <<EOF
-# {
-# "CN": "$cert_name",
-# "hosts": [
-#     "127.0.0.1",
-#     "localhost",
-#     "100.64.0.1",
-#     "$cert_name-service",
-#     "$cert_name-service.garden",
-#     "$cert_name-service.garden.svc",
-#     "$cert_name-service.garden.svc.cluster",
-#     "$cert_name-service.garden.svc.cluster.local",
-#     "$dashboard_ingress_domain"
-# ],
-# "key": {
-#     "algo": "rsa",
-#     "size": 2048
-# },
-# "names": []
-# }
-# EOF
-#     ) | cfssljson -bare "$path_tls_out/$cert_name"
-# fi
-
 issuerurl="$(cat "$STATE/identity/issuerurl")"
-
 template="$(cat "$CURRENT/template.json")"
 
 setjsonvalue template "apiServerUrl" "https://$(cat "$STATE/virtualapiserver/apiserver_dns")"
@@ -72,8 +34,6 @@ setjsonvalue template "tls.key" "$(cat "$STATE/identity/tls/identity-key.pem")"
 
 setjsonvalue template "oidc.ca" "$(cat "$STATE/identity/tls/identity-ca.pem")"
 setjsonvalue template "oidc.redirectUri" "https://$dashboard_ingress_domain/callback"
-
-setjsonvalue template "ingress.additionalHostPaths[0].path" "/oidc"
 
 setjsonvalue template "kubeconfig" "$(cat "$STATE/virtualapiserver/kubeconfig.yaml")"
 
