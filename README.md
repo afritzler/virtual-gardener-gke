@@ -12,7 +12,7 @@ _Disclaimer: This project sets up a Gardener landscape on a GKE cluster. This is
 * Domain/Zone in CloudDNS
 * GCP serviceaccount
 * terraform
-* yaml2json
+* yaml2json https://github.com/bronze1man/yaml2json
 * jq
 * cfssl
 * openssl
