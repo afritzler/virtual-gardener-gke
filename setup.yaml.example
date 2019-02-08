@@ -1,4 +1,4 @@
-kubeconfig: PATH_TO_GKE_KUBECONFIG
+kubeconfig: ./kubeconfig
 
 garden:
   clusterip: PICK_A_FREE_SERVICEIP
@@ -11,7 +11,7 @@ dashboard:
 cluster:
   networks:
     nodes: 10.132.0.0/16
-    pods: 10.40.0.0/15
+    pods: 10.40.0.0/14
     services: 10.43.240.0/20
 
 iaas:

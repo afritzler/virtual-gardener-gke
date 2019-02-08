@@ -12,7 +12,7 @@ _Disclaimer: This project sets up a Gardener landscape on a GKE cluster. This is
 * Domain/Zone in CloudDNS
 * GCP serviceaccount
 * terraform
-* yaml2json https://github.com/bronze1man/yaml2json
+* [yaml2json](https://github.com/bronze1man/yaml2json)
 * jq
 * cfssl
 * openssl
@@ -30,16 +30,32 @@ git clone https://github.com/afritzler/virtual-gardener-gke.git
 cd virtual-gardener-gke
 cp setup.yaml.example setup.yaml
 ```
+#### create gke cluster
 
-You will need a `kubeconfig` with basic-auth user authentication.
+```bash
+export GKE_CLUSTER_NAME=gardener
+export GCP_PROJECT=`gcloud config get-value project`
+
+gcloud container clusters create $GKE_CLUSTER_NAME --num-nodes=8 --zone=europe-west1-b --enable-basic-auth --password f00bar
+```
+You will need a `kubeconfig` with basic-auth user authentication:
 
 ```bash
 export KUBECONFIG=/tmp/kubeconfig
-gcloud container clusters get-credentials CLUSTER_NAME --zone europe-west1-b --project PROJECT_NAME
+gcloud container clusters get-credentials $GKE_CLUSTER_NAME --zone europe-west1-b --project $GCP_PROJECT
 src/bin/convertkubeconfig
 ```
+You need to enter `admin/f00bar` (from above) and it should be created at `./kubeconfig`
 
-Then, edit the `setup.yaml` accordingly.
+#### create gcp serviceaccount
+
+```bash
+gcloud iam service-accounts create gardener --display-name "Gardener"
+gcloud projects add-iam-policy-binding $GCP_PROJECT --member="serviceAccount:gardener@$GCP_PROJECT.iam.gserviceaccount.com" --role="roles/editor"
+gcloud iam service-accounts keys create ./google-serviceaccount.json --iam-account gardener@$GCP_PROJECT.iam.gserviceaccount.com
+```
+
+Then, edit the `setup.yaml` accordingly (e.g. paste the contents of `google-serviceaccount.json`)
 
 ### Deploy Ingress Controller + Ingress DNS Record
 

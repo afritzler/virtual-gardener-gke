@@ -143,6 +143,6 @@ helm upgrade \
 
 # export kubeconfig for admins
 info "Exporting kubeconfig for virtual Kubernetes cluster for Gardener..."
-kubectl -n garden get secret virtual-garden-kubeconfig-for-admin -o jsonpath={.data.kubeconfig} | base64 -d > "$STATE/virtualapiserver/kubeconfig.yaml"
+kubectl -n garden get secret virtual-garden-kubeconfig-for-admin -o jsonpath={.data.kubeconfig} | base64 --decode > "$STATE/virtualapiserver/kubeconfig.yaml"
 
 echo "$apiserver_dns" > "$STATE/virtualapiserver/apiserver_dns"
