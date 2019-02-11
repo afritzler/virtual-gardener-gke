@@ -2,6 +2,7 @@ FROM registry.fedoraproject.org/fedora:29 as cfsslbuild
 
 RUN dnf -y install golang
 RUN go get -u github.com/cloudflare/cfssl/cmd/cfssl
+RUN go get -u github.com/cloudflare/cfssl/cmd/cfssljson
 
 
 FROM registry.fedoraproject.org/fedora:29
@@ -11,7 +12,7 @@ ENV YAML2JSON_VER=1.3
 ENV KUBECTL_VER=1.13.3
 ENV HELM_VER=2.12.3
 
-RUN dnf -y install unzip jq git
+RUN dnf -y install unzip jq git httpd-tools
 RUN dnf clean all
 
 # terraform
@@ -30,6 +31,7 @@ RUN rm -rf linux_amd64
 
 # cfssl
 COPY --from=cfsslbuild /root/go/bin/cfssl /usr/local/bin/cfssl
+COPY --from=cfsslbuild /root/go/bin/cfssljson /usr/local/bin/cfssljson
 
 # yaml2json
 RUN curl -L -o /usr/local/bin/yaml2json https://github.com/bronze1man/yaml2json/releases/download/v${YAML2JSON_VER}/yaml2json_linux_amd64
