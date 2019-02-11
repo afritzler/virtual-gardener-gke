@@ -19,7 +19,7 @@ _Disclaimer: This project sets up a Gardener landscape on a GKE cluster. This is
 * kubectl
 * helm
 
-There's a docker image with the dependencies available at [willies/virtual-gardener-deps](https://cloud.docker.com/u/willies/repository/docker/willies/virtual-gardener-deps)
+There's a docker image with the dependencies available at [afritzler/virtual-gardener-gke](https://cloud.docker.com/repository/docker/afritzler/virtual-gardener-gke)
 
 ## Setup
 
