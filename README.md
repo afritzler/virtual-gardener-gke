@@ -19,6 +19,8 @@ _Disclaimer: This project sets up a Gardener landscape on a GKE cluster. This is
 * kubectl
 * helm
 
+There's a docker image with the dependencies available at [willies/virtual-gardener-deps](https://cloud.docker.com/u/willies/repository/docker/willies/virtual-gardener-deps)
+
 ## Setup
 
 ### Prepare setup.yaml
@@ -36,7 +38,7 @@ cp setup.yaml.example setup.yaml
 export GKE_CLUSTER_NAME=gardener
 export GCP_PROJECT=`gcloud config get-value project`
 
-gcloud container clusters create $GKE_CLUSTER_NAME --num-nodes=8 --zone=europe-west1-b --enable-basic-auth --password f00bar
+gcloud container clusters create $GKE_CLUSTER_NAME --num-nodes=4 --machine-type=n1-standard-4 --zone=europe-west1-b --enable-basic-auth --password f00bar
 ```
 You will need a `kubeconfig` with basic-auth user authentication:
 
@@ -56,6 +58,14 @@ gcloud iam service-accounts keys create ./google-serviceaccount.json --iam-accou
 ```
 
 Then, edit the `setup.yaml` accordingly (e.g. paste the contents of `google-serviceaccount.json`)
+
+### local dependencies
+either install dependencies locally or use the provided docker image:
+
+```
+docker run --rm -it -v $(pwd):/gardener -w /gardener willies/virtual-gardener-deps
+```
+
 
 ### Deploy Ingress Controller + Ingress DNS Record
 
