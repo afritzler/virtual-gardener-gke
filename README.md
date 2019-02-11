@@ -32,7 +32,8 @@ git clone https://github.com/afritzler/virtual-gardener-gke.git
 cd virtual-gardener-gke
 cp setup.yaml.example setup.yaml
 ```
-#### create gke cluster
+
+#### Create GKE cluster
 
 ```bash
 export GKE_CLUSTER_NAME=gardener
@@ -40,6 +41,7 @@ export GCP_PROJECT=`gcloud config get-value project`
 
 gcloud container clusters create $GKE_CLUSTER_NAME --num-nodes=4 --machine-type=n1-standard-4 --zone=europe-west1-b --enable-basic-auth --password f00bar
 ```
+
 You will need a `kubeconfig` with basic-auth user authentication:
 
 ```bash
@@ -47,9 +49,10 @@ export KUBECONFIG=/tmp/kubeconfig
 gcloud container clusters get-credentials $GKE_CLUSTER_NAME --zone europe-west1-b --project $GCP_PROJECT
 src/bin/convertkubeconfig
 ```
+
 You need to enter `admin/f00bar` (from above) and it should be created at `./kubeconfig`
 
-#### create gcp serviceaccount
+#### Create GCP serviceaccount
 
 ```bash
 gcloud iam service-accounts create gardener --display-name "Gardener"
@@ -59,13 +62,13 @@ gcloud iam service-accounts keys create ./google-serviceaccount.json --iam-accou
 
 Then, edit the `setup.yaml` accordingly (e.g. paste the contents of `google-serviceaccount.json`)
 
-### local dependencies
-either install dependencies locally or use the provided docker image:
+### Local dependencies
 
-```
-docker run --rm -it -v $(pwd):/gardener -w /gardener willies/virtual-gardener-deps
-```
+Either install dependencies locally or use the provided docker image:
 
+```bash
+docker run --rm -it -v $(pwd):/gardener -w /gardener afritzler/virtual-gardener-gke
+```
 
 ### Deploy Ingress Controller + Ingress DNS Record
 
