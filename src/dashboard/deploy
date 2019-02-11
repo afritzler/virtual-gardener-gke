@@ -49,6 +49,8 @@ helm upgrade \
   gardener-dashboard \
   "$repo/charts/gardener-dashboard"
 
+user="$(getconfig dashboard.email)"
+
 cat << EOF | kubectl --kubeconfig "$STATE/virtualapiserver/kubeconfig.yaml" apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -63,7 +65,7 @@ roleRef:
 subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
-  name: admin@example.com
+  name: $user
 EOF
 
 echo "##################################################
