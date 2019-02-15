@@ -50,6 +50,8 @@ gcloud container clusters get-credentials $GKE_CLUSTER_NAME --zone europe-west1-
 src/bin/convertkubeconfig
 ```
 
+The basic authentication credentials for your cluster can be found under cluster details -> "Show credentials".
+
 You need to enter `admin/f00bar` (from above) and it should be created at `./kubeconfig`
 
 #### Create GCP serviceaccount

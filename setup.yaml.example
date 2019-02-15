@@ -1,7 +1,7 @@
 kubeconfig: ./kubeconfig
 
 garden:
-  clusterip: PICK_A_FREE_SERVICEIP
+  clusterip: PICK_A_FREE_SERVICEIP # this e.g. service CIDR -> .20
 
 dashboard:
   # Those are the login credentials for the Gardener dashboard
@@ -10,9 +10,13 @@ dashboard:
 
 cluster:
   networks:
-    nodes: 10.132.0.0/16
-    pods: 10.40.0.0/14
-    services: 10.43.240.0/20
+    # You have to manually figure out what the GKE cluster network CIDRs are.
+    # Pod CIDR is the only one you can directly derive from your cluster details.
+    # Unfortunatelly the Pod CIDR in the cloud console also includes the Service
+    # CIDR range.
+    nodes: 10.132.0.0/16     # use kubectl get svc to figure this out
+    pods: 10.40.0.0/16       # the /14 range is to large, you need to pick /16 here
+    services: 10.43.240.0/20 # use kubectl get nodes -o wide to get this information
 
 iaas:
   region: europe-west1
