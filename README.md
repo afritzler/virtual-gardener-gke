@@ -8,7 +8,7 @@ _Disclaimer: This project sets up a Gardener landscape on a GKE cluster. This is
 
 ## Prerequisites
 
-* Kubernetes cluster
+* Kubernetes cluster (min 4x n1-standard-2 nodes)
 * Domain/Zone in CloudDNS
 * GCP serviceaccount
 * terraform
