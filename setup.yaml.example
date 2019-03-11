@@ -14,9 +14,9 @@ cluster:
     # Pod CIDR is the only one you can directly derive from your cluster details.
     # Unfortunatelly the Pod CIDR in the cloud console also includes the Service
     # CIDR range.
-    nodes: 10.132.0.0/16     # use kubectl get svc to figure this out
+    nodes: 10.132.0.0/16     # use kubectl get nodes -o wide to get this information
     pods: 10.40.0.0/16       # the /14 range is to large, you need to pick /16 here
-    services: 10.43.240.0/20 # use kubectl get nodes -o wide to get this information
+    services: 10.43.240.0/20 # use kubectl get svc to figure this out
 
 iaas:
   region: europe-west1
