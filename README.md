@@ -47,6 +47,7 @@ You will need a `kubeconfig` with basic-auth user authentication:
 ```bash
 export KUBECONFIG=/tmp/kubeconfig
 gcloud container clusters get-credentials $GKE_CLUSTER_NAME --zone europe-west1-b --project $GCP_PROJECT
+mv kubeconfig $KUBECONFIG
 src/bin/convertkubeconfig
 ```
 
